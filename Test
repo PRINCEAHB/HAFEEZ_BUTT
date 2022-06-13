@@ -1,0 +1,1837 @@
+
+
+-- triggers
+create or replace trigger projects_biu
+    before insert or update 
+    on projects
+    for each row
+begin
+    if inserting then
+        :new.created := sysdate;
+        :new.created_by := nvl(sys_context('APEX$SESSION','APP_USER'),user);
+    end if;
+    :new.updated := sysdate;
+    :new.updated_by := nvl(sys_context('APEX$SESSION','APP_USER'),user);
+end projects_biu;
+
+
+create or replace trigger action_items_biu
+    before insert or update 
+    on action_items
+    for each row
+begin
+    if inserting then
+        :new.created := sysdate;
+        :new.created_by := nvl(sys_context('APEX$SESSION','APP_USER'),user);
+    end if;
+    :new.updated := sysdate;
+    :new.updated_by := nvl(sys_context('APEX$SESSION','APP_USER'),user);
+end action_items_biu;
+/
+
+create or replace trigger attachments_biu
+    before insert or update 
+    on attachments
+    for each row
+begin
+    if inserting then
+        :new.created := sysdate;
+        :new.created_by := nvl(sys_context('APEX$SESSION','APP_USER'),user);
+    end if;
+    :new.updated := sysdate;
+    :new.updated_by := nvl(sys_context('APEX$SESSION','APP_USER'),user);
+end attachments_biu;
+/
+
+create or replace trigger links_biu
+    before insert or update 
+    on links
+    for each row
+begin
+    if inserting then
+        :new.created := sysdate;
+        :new.created_by := nvl(sys_context('APEX$SESSION','APP_USER'),user);
+    end if;
+    :new.updated := sysdate;
+    :new.updated_by := nvl(sys_context('APEX$SESSION','APP_USER'),user);
+end links_biu;
+/
+
+create or replace trigger milestones_biu
+    before insert or update 
+    on milestones
+    for each row
+begin
+    if inserting then
+        :new.created := sysdate;
+        :new.created_by := nvl(sys_context('APEX$SESSION','APP_USER'),user);
+    end if;
+    :new.updated := sysdate;
+    :new.updated_by := nvl(sys_context('APEX$SESSION','APP_USER'),user);
+end milestones_biu;
+/
+
+
+-- indexes
+create index action_items_i1 on action_items (project_id);
+create index attachments_i1 on attachments (project_id);
+create index links_i1 on links (project_id);
+create index milestones_i1 on milestones (project_id);
+
+-- history tracking
+create sequence history_seq;
+
+
+create index history_idx1 on history (pk1);
+create index history_idx2 on history (table_name, column_name);
+
+create or replace view history_v as
+select id,
+       table_name,
+       column_name,
+       decode(action,'U','Update','D','Delete') action,
+       action_date,
+       action_by,
+       pk1 table_primary_key,
+       tab_row_version table_row_version,
+       decode(data_type,
+         'NUMBER',old_number||' > '||new_number,
+         'VARCHAR2',substr(old_vc,1,50)||' > '||substr(new_vc,1,50),
+         'DATE',to_char(old_date,'YYYYMMDD HH24:MI:SS')||' > '||to_char(new_date,'YYYYMMDD HH24:MI:SS'),
+         'TIMESTAMP',to_char(old_ts,'YYYYMMDD HH24:MI:SS')||' > '||to_char(new_ts,'YYYYMMDD HH24:MI:SS'),
+         'TIMESTAMP WITH TIMEZONE',to_char(old_tswtz,'YYYYMMDD HH24:MI:SS')||' > '||to_char(new_tswtz,'YYYYMMDD HH24:MI:SS'),
+         'TIMESTAMP WITH LOCAL TIMEZONE',to_char(old_tswltz,'YYYYMMDD HH24:MI:SS')||' > '||to_char(new_tswltz,'YYYYMMDD HH24:MI:SS'),
+         'BLOB','length '||sys.dbms_lob.getlength(old_blob)||' > '||' length '||sys.dbms_lob.getlength(new_blob),
+         'CLOB',sys.dbms_lob.substr(old_vc,50,1)||' > '||sys.dbms_lob.substr(new_vc,50,1)
+         ) change
+from history
+/
+
+create or replace trigger milestones_aud 
+    after update or delete on milestones
+    for each row
+declare
+    t varchar2(128) := 'MILESTONES';
+    u varchar2(128) := nvl(sys_context('APEX$SESSION','APP_USER'),user);
+begin
+if updating then
+    if (:old.project_id is null and :new.project_id is not null) or 
+        (:old.project_id is not null and :new.project_id is null) or 
+        :old.project_id != :new.project_id then 
+        insert into history (
+            id, table_name, column_name, pk1, tab_row_version, action, action_date, action_by, data_type, old_number, new_number
+        ) values (
+            history_seq.nextval, t, 'PROJECT_ID', :old.id, null, 'U', sysdate, u, 'NUMBER', :old.project_id, :new.project_id);
+
+    end if;
+    if (:old.name is null and :new.name is not null) or 
+        (:old.name is not null and :new.name is null) or 
+        :old.name != :new.name then 
+        insert into history (
+            id, table_name, column_name, pk1, tab_row_version, action, action_date, action_by, data_type, old_vc, new_vc
+        ) values (
+            history_seq.nextval, t, 'NAME', :old.id, null, 'U', sysdate, u, 'VARCHAR2', :old.name, :new.name);
+
+    end if;
+    if (:old.status is null and :new.status is not null) or 
+        (:old.status is not null and :new.status is null) or 
+        :old.status != :new.status then 
+        insert into history (
+            id, table_name, column_name, pk1, tab_row_version, action, action_date, action_by, data_type, old_vc, new_vc
+        ) values (
+            history_seq.nextval, t, 'STATUS', :old.id, null, 'U', sysdate, u, 'VARCHAR2', :old.status, :new.status);
+
+    end if;
+    if (:old.owner is null and :new.owner is not null) or 
+        (:old.owner is not null and :new.owner is null) or 
+        :old.owner != :new.owner then 
+        insert into history (
+            id, table_name, column_name, pk1, tab_row_version, action, action_date, action_by, data_type, old_vc, new_vc
+        ) values (
+            history_seq.nextval, t, 'OWNER', :old.id, null, 'U', sysdate, u, 'VARCHAR2', :old.owner, :new.owner);
+
+    end if;
+    if (:old.started is null and :new.started is not null) or 
+        (:old.started is not null and :new.started is null) or 
+        :old.started != :new.started then 
+        insert into history (
+            id, table_name, column_name, pk1, tab_row_version, action, action_date, action_by, data_type, old_date, new_date
+        ) values (
+            history_seq.nextval, t, 'STARTED', :old.id, null, 'U', sysdate, u, 'DATE', :old.started, :new.started);
+
+    end if;
+    if (:old.closed is null and :new.closed is not null) or 
+        (:old.closed is not null and :new.closed is null) or 
+        :old.closed != :new.closed then 
+        insert into history (
+            id, table_name, column_name, pk1, tab_row_version, action, action_date, action_by, data_type, old_date, new_date
+        ) values (
+            history_seq.nextval, t, 'CLOSED', :old.id, null, 'U', sysdate, u, 'DATE', :old.closed, :new.closed);
+
+    end if;
+elsif deleting then
+    insert into history (
+        id, table_name, column_name, pk1, tab_row_version, action, action_date, action_by, data_type, old_number, new_number
+    ) values (
+        history_seq.nextval, t, 'PROJECT_ID', :old.id, null, 'D', sysdate, u, 'NUMBER', :old.project_id, :new.project_id);
+    insert into history (
+        id, table_name, column_name, pk1, tab_row_version, action, action_date, action_by, data_type, old_vc, new_vc
+    ) values (
+        history_seq.nextval, t, 'NAME', :old.id, null, 'D', sysdate, u, 'VARCHAR2', :old.name, :new.name);
+    insert into history (
+        id, table_name, column_name, pk1, tab_row_version, action, action_date, action_by, data_type, old_vc, new_vc
+    ) values (
+        history_seq.nextval, t, 'STATUS', :old.id, null, 'D', sysdate, u, 'VARCHAR2', :old.status, :new.status);
+    insert into history (
+        id, table_name, column_name, pk1, tab_row_version, action, action_date, action_by, data_type, old_vc, new_vc
+    ) values (
+        history_seq.nextval, t, 'OWNER', :old.id, null, 'D', sysdate, u, 'VARCHAR2', :old.owner, :new.owner);
+    insert into history (
+        id, table_name, column_name, pk1, tab_row_version, action, action_date, action_by, data_type, old_date, new_date
+    ) values (
+        history_seq.nextval, t, 'STARTED', :old.id, null, 'D', sysdate, u, 'DATE', :old.started, :new.started);
+    insert into history (
+        id, table_name, column_name, pk1, tab_row_version, action, action_date, action_by, data_type, old_date, new_date
+    ) values (
+        history_seq.nextval, t, 'CLOSED', :old.id, null, 'D', sysdate, u, 'DATE', :old.closed, :new.closed);
+
+end if;
+end milestones_aud;
+/
+
+
+-- create views
+create or replace view project_ms as 
+select 
+    projects.name                                      project_name,
+    projects.owner                                     project_owner,
+    projects.created                                   project_created,
+    projects.created_by                                project_created_by,
+    projects.updated                                   project_updated,
+    projects.updated_by                                project_updated_by,
+    milestones.name                                    milestone_name,
+    milestones.status                                  status,
+    milestones.owner                                   milestone_owner,
+    milestones.started                                 started,
+    milestones.closed                                  closed,
+    milestones.created                                 milestone_created,
+    milestones.created_by                              milestone_created_by,
+    milestones.updated                                 milestone_updated,
+    milestones.updated_by                              milestone_updated_by
+from 
+    projects,
+    milestones
+where
+    milestones.project_id(+) = projects.id;
+/
+
+create or replace view project_ai as 
+select 
+    projects.name                                      name,
+    projects.owner                                     project_owner,
+    projects.created                                   project_created,
+    projects.created_by                                project_created_by,
+    projects.updated                                   project_updated,
+    projects.updated_by                                project_updated_by,
+    action_items.action                                action,
+    action_items.the_desc                              the_desc,
+    action_items.owner                                 action_item_owner,
+    action_items.status                                status,
+    action_items.created                               action_item_created,
+    action_items.created_by                            action_item_created_by,
+    action_items.updated                               action_item_updated,
+    action_items.updated_by                            action_item_updated_by
+from 
+    projects,
+    action_items
+where
+    action_items.project_id(+) = projects.id
+/
+
+-- create views
+create or replace view sales_v as 
+select 
+    products.name                                      product_name,
+    products.description                               description,
+    products.sku                                       sku,
+    products.unit                                      unit,
+    products.unit_price                                product_unit_price,
+    customers.first_name                               first_name,
+    customers.last_name                                last_name,
+    customers.email                                    email,
+    customers.city                                     city,
+    customers.country                                  country,
+    customers.gender                                   gender,
+    customers.date_of_birth                            date_of_birth,
+    customers.phone                                    phone,
+    customers.postal_code                              postal_code,
+    channels.name                                      channel_name,
+    promotions.name                                    promotion_name,
+    promotions.code                                    code,
+    promotions.date_begin                              date_begin,
+    promotions.date_end                                date_end,
+    promotions.discount_percentage                     discount_percentage,
+    sales.date_of_sale                                 date_of_sale,
+    sales.quantity                                     quantity,
+    sales.unit_price                                   sale_unit_price
+from 
+    products,
+    customers,
+    channels,
+    promotions,
+    sales
+where
+    sales.product_id(+) = products.id and
+    sales.customer_id(+) = customers.id and
+    sales.promotion_id(+) = promotions.id and
+    sales.channel_id(+) = channels.id;
+-- indexes
+create index sales_i1 on sales (channel_id);
+create index sales_i2 on sales (customer_id);
+create index sales_i3 on sales (product_id);
+create index sales_i4 on sales (promotion_id);
+
+-- create tables
+create table products (
+    name                           varchar2(50),
+    description                    varchar2(4000),
+    sku                            varchar2(30),
+    unit                           number,
+    unit_price                     number
+)
+;
+
+create table customers (
+    first_name                     varchar2(255),
+    last_name                      varchar2(255),
+    email                          varchar2(255),
+    city                           varchar2(255),
+    country                        varchar2(50),
+    gender                         varchar2(30) constraint customers_gender_cc
+                                   check (gender in ('MALE','FEMALE')),
+    date_of_birth                  date,
+    phone                          varchar2(30),
+    postal_code                    varchar2(30)
+)
+;
+
+create table channels (
+    name                           varchar2(255) constraint channels_name_cc
+                                   check (name in ('DIRECT','ONLINE','PHONE'))
+)
+;
+
+create table promotions (
+    name                           varchar2(255),
+    code                           varchar2(10),
+    date_begin                     date,
+    date_end                       date,
+    discount_percentage            number
+)
+;
+
+create table sales (
+    product_id                     number
+                                   constraint sales_product_id_fk
+                                   references products on delete cascade,
+    customer_id                    number
+                                   constraint sales_customer_id_fk
+                                   references customers on delete cascade,
+    promotion_id                   number
+                                   constraint sales_promotion_id_fk
+                                   references promotions on delete cascade,
+    channel_id                     number
+                                   constraint sales_channel_id_fk
+                                   references channels on delete cascade,
+    date_of_sale                   date,
+    quantity                       number,
+    unit_price                     number
+)
+;
+
+
+-- triggers
+create or replace trigger channels_biu
+    before insert or update 
+    on channels
+    for each row
+begin
+    null;
+end channels_biu;
+/
+
+create or replace trigger customers_biu
+    before insert or update 
+    on customers
+    for each row
+begin
+    null;
+end customers_biu;
+/
+
+create or replace trigger products_biu
+    before insert or update 
+    on products
+    for each row
+begin
+    null;
+end products_biu;
+/
+
+create or replace trigger promotions_biu
+    before insert or update 
+    on promotions
+    for each row
+begin
+    null;
+end promotions_biu;
+/
+
+create or replace trigger sales_biu
+    before insert or update 
+    on sales
+    for each row
+begin
+    null;
+end sales_biu;
+/
+
+
+-- indexes
+create index sales_i1 on sales (channel_id);
+create index sales_i2 on sales (customer_id);
+create index sales_i3 on sales (product_id);
+create index sales_i4 on sales (promotion_id);
+
+-- create views
+create or replace view sales_v as 
+select 
+    products.name                                      product_name,
+    products.description                               description,
+    products.sku                                       sku,
+    products.unit                                      unit,
+    products.unit_price                                product_unit_price,
+    customers.first_name                               first_name,
+    customers.last_name                                last_name,
+    customers.email                                    email,
+    customers.city                                     city,
+    customers.country                                  country,
+    customers.gender                                   gender,
+    customers.date_of_birth                            date_of_birth,
+    customers.phone                                    phone,
+    customers.postal_code                              postal_code,
+    channels.name                                      channel_name,
+    promotions.name                                    promotion_name,
+    promotions.code                                    code,
+    promotions.date_begin                              date_begin,
+    promotions.date_end                                date_end,
+    promotions.discount_percentage                     discount_percentage,
+    sales.date_of_sale                                 date_of_sale,
+    sales.quantity                                     quantity,
+    sales.unit_price                                   sale_unit_price
+from 
+    products,
+    customers,
+    channels,
+    promotions,
+    sales
+where
+    sales.product_id(+) = products.id and
+    sales.customer_id(+) = customers.id and
+    sales.promotion_id(+) = promotions.id and
+    sales.channel_id(+) = channels.id
+/
+
+-- load data
+ 
+insert into products (
+    name,
+    description,
+    sku,
+    unit,
+    unit_price
+) values (
+    'M-AAB1-46',
+    'Risus rhoncus.Cras vulputate porttitor ligula. Nam semper diam suscipit elementum sodales. Proin sit amet massa eu lorem commodo ullamcorper.Interdum et malesuada fames ac ante ipsum primis in faucibus. Ut id nulla ac sapien suscipit tristique ac volutpat risus.Phasellus vitae ligula commodo, dictum lorem sit amet,.',
+    'Et Ultrices Posuere',
+    22,
+    91
+);
+
+insert into products (
+    name,
+    description,
+    sku,
+    unit,
+    unit_price
+) values (
+    'M-AACO-66',
+    'Aliquam. Vestibulum lacinia arcu in massa pharetra, id mattis risus rhoncus.Cras vulputate porttitor ligula. Nam semper diam suscipit elementum sodales. Proin sit amet massa eu lorem commodo ullamcorper.Interdum et malesuada fames ac ante ipsum primis in.',
+    'Ut Id Nulla',
+    59,
+    47
+);
+
+insert into products (
+    name,
+    description,
+    sku,
+    unit,
+    unit_price
+) values (
+    'M-AAAW-22',
+    'Venenatis nec. Donec convallis sollicitudin elementum. Nulla facilisi. In posuere blandit leoeget malesuada. Vivamus efficitur ipsum tellus, quis posuere mi maximus vitae. Quisque tortor odio, feugiat eget sagittisvel, pretium ut metus. Duis et commodo arcu, in vestibulum tellus. In sollicitudin nisi mi, pharetra gravida ex semper ut.Donec nibh sapien, hendrerit quis.',
+    'Ipsumprimis In Faucibus',
+    96,
+    37
+);
+
+insert into products (
+    name,
+    description,
+    sku,
+    unit,
+    unit_price
+) values (
+    'M-AACV-73',
+    'Sit amet massa eu lorem commodo ullamcorper.Interdum et.',
+    'Pharetra Id Mattis',
+    61,
+    3
+);
+
+insert into products (
+    name,
+    description,
+    sku,
+    unit,
+    unit_price
+) values (
+    'M-AADT-97',
+    'Id mattis risus rhoncus.Cras vulputate porttitor ligula. Nam semper diam suscipit elementum sodales. Proin sit amet massa eu lorem commodo ullamcorper.Interdum et malesuada fames ac ante ipsum primis in faucibus. Ut id nulla ac sapien suscipit tristique ac volutpat risus.Phasellus vitae ligula commodo, dictum lorem sit amet, imperdiet ex. Etiam cursus porttitor tincidunt. Vestibulum ante ipsumprimis in faucibus orci luctus et ultrices posuere cubilia Curae; Proin vulputate placerat pellentesque. Proin viverra lacinialectus, quis consectetur mi venenatis nec. Donec convallis sollicitudin elementum. Nulla facilisi. In posuere blandit.',
+    'Placerat Pellentesque Proin',
+    42,
+    11
+);
+
+insert into products (
+    name,
+    description,
+    sku,
+    unit,
+    unit_price
+) values (
+    'M-AADA-78',
+    'Commodo, dictum lorem sit amet, imperdiet ex. Etiam cursus porttitor tincidunt. Vestibulum ante ipsumprimis in faucibus orci.',
+    'Eget Rhoncus Nonmolestie',
+    18,
+    17
+);
+
+insert into products (
+    name,
+    description,
+    sku,
+    unit,
+    unit_price
+) values (
+    'M-AACG-58',
+    'Et malesuada fames ac ante ipsum primis in faucibus. Ut id nulla ac sapien suscipit tristique ac volutpat risus.Phasellus vitae ligula commodo, dictum lorem.',
+    'Pellentesque Proin Viverra',
+    38,
+    25
+);
+
+insert into products (
+    name,
+    description,
+    sku,
+    unit,
+    unit_price
+) values (
+    'M-AABJ-35',
+    'In massa pharetra, id mattis risus rhoncus.Cras vulputate porttitor ligula. Nam semper diam suscipit elementum sodales. Proin sit amet massa eu lorem commodo ullamcorper.Interdum et malesuada fames ac ante ipsum primis in faucibus. Ut id nulla ac sapien suscipit tristique ac volutpat risus.Phasellus vitae ligula commodo, dictum lorem sit amet,.',
+    'Malesuada Fames Ac',
+    86,
+    66
+);
+
+insert into products (
+    name,
+    description,
+    sku,
+    unit,
+    unit_price
+) values (
+    'M-AADH-85',
+    'Posuere cubilia Curae; Proin vulputate placerat pellentesque. Proin viverra lacinialectus, quis consectetur mi venenatis nec. Donec convallis sollicitudin elementum. Nulla facilisi. In posuere blandit leoeget malesuada. Vivamus efficitur ipsum tellus, quis posuere mi maximus vitae. Quisque tortor odio, feugiat eget sagittisvel, pretium ut metus. Duis et commodo arcu, in vestibulum tellus. In sollicitudin nisi mi, pharetra.',
+    'Proin Vulputate Placerat',
+    76,
+    43
+);
+
+insert into products (
+    name,
+    description,
+    sku,
+    unit,
+    unit_price
+) values (
+    'M-AAAO-14',
+    'Donec convallis.',
+    'Massa Pharetra Id',
+    57,
+    7
+);
+
+commit;
+-- load data
+ 
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'Gricelda',
+    'Luebbers',
+    'gricelda.luebbers@aaab.com',
+    'Tanquecitos',
+    'United States',
+    'MALE',
+    sysdate - 81,
+    'Luctus Et Ultrices',
+    'Rhoncus Nonmolestie Sit'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'Dean',
+    'Bollich',
+    'dean.bollich@aaac.com',
+    'Sugarloaf',
+    'United States',
+    'FEMALE',
+    sysdate - 32,
+    'Vulputate Placerat Pellentesqu',
+    'Risusphasellus Vitae Ligula'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'Milo',
+    'Manoni',
+    'milo.manoni@aaad.com',
+    'Dale City',
+    'United States',
+    'MALE',
+    sysdate - 29,
+    'Nulla Ac Sapien',
+    'Sit Amet Massa'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'Laurice',
+    'Karl',
+    'laurice.karl@aaae.com',
+    'Grosvenor',
+    'United States',
+    'FEMALE',
+    sysdate - 20,
+    'Vestibulum Lacinia Arcu',
+    'Eget Rhoncus Nonmolestie'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'August',
+    'Rupel',
+    'august.rupel@aaaf.com',
+    'Riverside',
+    'United States',
+    'MALE',
+    sysdate - 61,
+    'Amet Lectus Nulla',
+    'Proin Sit Amet'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'Salome',
+    'Guisti',
+    'salome.guisti@aaag.com',
+    'Ridgeley',
+    'United States',
+    'FEMALE',
+    sysdate - 27,
+    'Mi Venenatis Nec',
+    'Et Ultrices Posuere'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'Lovie',
+    'Ritacco',
+    'lovie.ritacco@aaah.com',
+    'Ashley Heights',
+    'United States',
+    'MALE',
+    sysdate - 86,
+    'Sit Amet Lectus',
+    'Placerat Pellentesque Proin'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'Chaya',
+    'Greczkowski',
+    'chaya.greczkowski@aaai.com',
+    'Monfort Heights',
+    'United States',
+    'FEMALE',
+    sysdate - 58,
+    'Et Malesuada Fames',
+    'Volutpat Risusphasellus Vitae'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'Twila',
+    'Coolbeth',
+    'twila.coolbeth@aaaj.com',
+    'Point Marion',
+    'United States',
+    'MALE',
+    sysdate - 72,
+    'Pharetra Id Mattis',
+    'Pellentesque Proin Viverra'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'Carlotta',
+    'Achenbach',
+    'carlotta.achenbach@aaak.com',
+    'Eldon',
+    'United States',
+    'FEMALE',
+    sysdate - 34,
+    'In Faucibus Orci',
+    'Amet Lectus Nulla'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'Jeraldine',
+    'Audet',
+    'jeraldine.audet@aaal.com',
+    'Greendale',
+    'United States',
+    'MALE',
+    sysdate - 97,
+    'Ante Ipsumprimis In',
+    'Placerat Pellentesque Proin'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'August',
+    'Arouri',
+    'august.arouri@aaam.com',
+    'Ammon',
+    'United States',
+    'FEMALE',
+    sysdate - 78,
+    'Tristique Ac Volutpat',
+    'Sit Amet Massa'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'Ward',
+    'Stepney',
+    'ward.stepney@aaan.com',
+    'Wallsburg',
+    'United States',
+    'MALE',
+    sysdate - 54,
+    'Faucibus Ut Id',
+    'Volutpat Risusphasellus Vitae'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'Ayana',
+    'Barkhurst',
+    'ayana.barkhurst@aaao.com',
+    'De Pue',
+    'United States',
+    'FEMALE',
+    sysdate - 45,
+    'Massa Eu Lorem',
+    'Amet Massa Eu'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'Luana',
+    'Berends',
+    'luana.berends@aaap.com',
+    'Prompton',
+    'United States',
+    'MALE',
+    sysdate - 29,
+    'Ac Ante Ipsum',
+    'Ipsum Primis In'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'Lecia',
+    'Alvino',
+    'lecia.alvino@aaaq.com',
+    'New Rockford',
+    'United States',
+    'FEMALE',
+    sysdate - 31,
+    'Et Ultrices Posuere',
+    'Lectus Nulla Placerat'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'Joleen',
+    'Himmelmann',
+    'joleen.himmelmann@aaar.com',
+    'Tygh Valley',
+    'United States',
+    'MALE',
+    sysdate - 45,
+    'Quis Consectetur Mi',
+    'Faucibus Ut Id'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'Monty',
+    'Kinnamon',
+    'monty.kinnamon@aaas.com',
+    'Lookout',
+    'United States',
+    'FEMALE',
+    sysdate - 56,
+    'Arcu In Massa',
+    'Cubilia Curae; Proin'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'Dania',
+    'Grizzard',
+    'dania.grizzard@aaat.com',
+    'Hermiston',
+    'United States',
+    'MALE',
+    sysdate - 94,
+    'Malesuada Fames Ac',
+    'Malesuada Fames Ac'
+);
+
+insert into customers (
+    first_name,
+    last_name,
+    email,
+    city,
+    country,
+    gender,
+    date_of_birth,
+    phone,
+    postal_code
+) values (
+    'Inez',
+    'Yamnitz',
+    'inez.yamnitz@aaau.com',
+    'Mendota Heights',
+    'United States',
+    'FEMALE',
+    sysdate - 50,
+    'Ipsumprimis In Faucibus',
+    'Pellentesque Proin Viverra'
+);
+
+commit;
+-- load data
+ 
+insert into channels (
+    name
+) values (
+    'DIRECT'
+);
+
+insert into channels (
+    name
+) values (
+    'ONLINE'
+);
+
+insert into channels (
+    name
+) values (
+    'PHONE'
+);
+
+commit;
+-- load data
+ 
+insert into promotions (
+    name,
+    code,
+    date_begin,
+    date_end,
+    discount_percentage
+) values (
+    'Mac Prevention',
+    'Convallis',
+    sysdate - 1,
+    sysdate - 45,
+    7
+);
+
+insert into promotions (
+    name,
+    code,
+    date_begin,
+    date_end,
+    discount_percentage
+) values (
+    'Personal Information Security Review',
+    'Amet',
+    sysdate - 85,
+    sysdate - 79,
+    72
+);
+
+insert into promotions (
+    name,
+    code,
+    date_begin,
+    date_end,
+    discount_percentage
+) values (
+    'Employee Automation',
+    'Id',
+    sysdate - 46,
+    sysdate - 45,
+    89
+);
+
+insert into promotions (
+    name,
+    code,
+    date_begin,
+    date_end,
+    discount_percentage
+) values (
+    'Deadlock Detection Review',
+    'Nec',
+    sysdate - 92,
+    sysdate - 67,
+    53
+);
+
+commit;
+-- load data
+ 
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 64,
+    84,
+    56
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 36,
+    39,
+    82
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 40,
+    99,
+    88
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 87,
+    35,
+    8
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 27,
+    17,
+    26
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 74,
+    41,
+    62
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 86,
+    58,
+    40
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 41,
+    60,
+    2
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 49,
+    84,
+    45
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 41,
+    11,
+    30
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 68,
+    100,
+    43
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 86,
+    95,
+    82
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 8,
+    44,
+    63
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 38,
+    76,
+    42
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 43,
+    7,
+    5
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 62,
+    4,
+    31
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 80,
+    46,
+    26
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 70,
+    34,
+    47
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 7,
+    4,
+    51
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 28,
+    93,
+    11
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 95,
+    6,
+    48
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 15,
+    54,
+    32
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 4,
+    12,
+    10
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 75,
+    68,
+    39
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 44,
+    45,
+    15
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 70,
+    40,
+    16
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 69,
+    71,
+    25
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 99,
+    94,
+    32
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 69,
+    56,
+    86
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 24,
+    54,
+    53
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 77,
+    22,
+    11
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 63,
+    51,
+    31
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 90,
+    57,
+    74
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 62,
+    71,
+    1
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 93,
+    94,
+    91
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 36,
+    51,
+    27
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 34,
+    97,
+    11
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 58,
+    6,
+    61
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 35,
+    53,
+    88
+);
+
+insert into sales (
+    product_id,
+    customer_id,
+    promotion_id,
+    channel_id,
+    date_of_sale,
+    quantity,
+    unit_price
+) values (
+    1,
+    1,
+    1,
+    1,
+    sysdate - 48,
+    78,
+    89
+);
+
+commit;
+
+
+
+
