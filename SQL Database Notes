@@ -1,0 +1,162 @@
+learning
+12345
+
+SQL Database Notes:
+
+
+
+INSERT INTO SELECT
+The following SQL statement copies "Suppliers" into "Customers" (fill all columns):
+
+INSERT INTO Customers (CustomerName, ContactName, Address, City, PostalCode, Country)
+SELECT SupplierName, ContactName, Address, City, PostalCode, Country FROM Suppliers;
+
+The following SQL statement copies only the German suppliers into "Customers":
+
+INSERT INTO Customers (CustomerName, City, Country)
+SELECT SupplierName, City, Country FROM Suppliers
+WHERE Country='Germany';
+
+The following SQL goes through conditions and returns a value when the first condition is met:
+
+SELECT OrderID, Quantity,
+CASE
+    WHEN Quantity > 30 THEN 'The quantity is greater than 30'
+    WHEN Quantity = 30 THEN 'The quantity is 30'
+    ELSE 'The quantity is under 30'
+END AS QuantityText
+FROM OrderDetails;
+
+The following SQL statement creates a stored procedure named "SelectAllCustomers" that selects all records from the "Customers" table
+
+CREATE PROCEDURE SelectAllCustomers
+AS
+SELECT * FROM Customers
+GO;
+Execute the stored procedure above as follows:
+EXEC SelectAllCustomers;
+
+The following SQL statement creates a stored procedure that selects Customers from a particular City from the "Customers" table:
+CREATE PROCEDURE SelectAllCustomers @City nvarchar(30)
+AS
+SELECT * FROM Customers WHERE City = @City
+GO;
+
+Execute the stored procedure above as follows:
+
+Example
+EXEC SelectAllCustomers @City = 'London';
+
+Stored Procedure With Multiple Parameters
+Setting up multiple parameters is very easy. Just list each parameter and the data type separated by a comma as shown below.
+
+The following SQL statement creates a stored procedure that selects Customers from a particular City with a particular PostalCode from the "Customers" table:
+
+Example
+CREATE PROCEDURE SelectAllCustomers @City nvarchar(30), @PostalCode nvarchar(10)
+AS
+SELECT * FROM Customers WHERE City = @City AND PostalCode = @PostalCode
+GO;
+Execute the stored procedure above as follows:
+
+Example
+EXEC SelectAllCustomers @City = 'London', @PostalCode = 'WA1 1DP';
+
+
+The following SQL will order the customers by City. However, if City is NULL, then order by Country
+
+SELECT CustomerName, City, Country
+FROM Customers
+ORDER BY
+(CASE
+    WHEN City IS NULL THEN Country
+    ELSE City
+END);
+
+Some of The Most Important SQL Commands
+SELECT - extracts data from a database
+example: SELECT City FROM Customers
+UPDATE - updates data in a database
+DELETE - deletes data from a database
+INSERT INTO - inserts new data into a database
+CREATE DATABASE - creates a new database
+ALTER DATABASE - modifies a database
+CREATE TABLE - creates a new table
+ALTER TABLE - modifies a table
+DROP TABLE - deletes a table
+CREATE INDEX - creates an index (search key)
+DROP INDEX - deletes an index
+
+Create A table:
+CREATE TABLE students (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  gender TEXT NOT NULL
+);
+
+Inner Join:
+select
+SCHOOL.SchoolName,
+CLASS.ClassName
+from
+SCHOOL
+INNER JOIN CLASS ON SCHOOL.SchoolId = CLASS.SchoolId
+
+-- insert some values
+INSERT INTO students VALUES (1, 'Ryan', 'M');
+INSERT INTO students VALUES (2, 'Joanna', 'F');
+-- fetch some values
+SELECT * FROM students WHERE gender = 'F';
+
+SELECT City FROM Customers
+UNION
+SELECT City FROM Suppliers
+ORDER BY City;
+The following SQL statement selects all customers that are located in "Germany", "France" or "UK":
+SELECT * FROM Customers
+WHERE Country IN ('Germany', 'France', 'UK');
+The following SQL statement selects all customers that are NOT located in "Germany", "France" or "UK":
+SELECT * FROM Customers
+WHERE Country NOT IN ('Germany', 'France', 'UK');
+The following SQL statement selects all customers that are from the same countries as the suppliers:
+SELECT * FROM Customers
+WHERE Country IN (SELECT Country FROM Suppliers);
+
+The following SQL statement selects all products with a price between 10 and 2
+SELECT * FROM Products
+WHERE Price BETWEEN 10 AND 20;
+To display the products outside the range of the previous example, use NOT BETWEEN
+SELECT * FROM Products
+WHERE Price NOT BETWEEN 10 AND 20;
+The following SQL statement selects all products with a price between 10 and 20. In addition; do not show products with a CategoryID of 1,2, or 3:
+SELECT * FROM Products
+WHERE Price BETWEEN 10 AND 20
+AND CategoryID NOT IN (1,2,3);
+
+-- create a table
+CREATE TABLE students (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  gender TEXT NOT NULL
+);
+-- insert some values
+INSERT INTO students VALUES (1, 'hafeez', 'M');
+INSERT INTO students VALUES (2, 'nida', 'F');
+-- fetch some values
+select * from students;
+
+
+create table customers (
+        id number primary key,
+        CustomerName text not null,
+        Address   text not null,
+        Country  text not null
+        );
+        
+        insert into customers values(1, 'Aalia','Isb', 'Pakistan');
+        insert into customers values(2, 'Aamir','Isb', 'Pakistan');
+        insert into customers values(3, 'Alfreds', 'Berlin','Germany');
+        insert into customers values(4, 'Horn', 'london', 'UK');
+
+        select * from customers 
+        where country = 'Germany';
