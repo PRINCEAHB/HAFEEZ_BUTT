@@ -7,7 +7,6 @@ create table products (
     unit                           number,
     unit_price                     number
 );
-
 create table expenses (
     the_date                       date,
     the_desc                       varchar2(4000),
@@ -26,7 +25,6 @@ create table customers (
     phone                          varchar2(30),
     postal_code                    varchar2(30)
 );
-
 create table channels (
     name                           varchar2(255) constraint channels_name_cc
                                    check (name in ('DIRECT','ONLINE','PHONE'))
@@ -94,8 +92,6 @@ create table projects (
     updated                        date not null,
     updated_by                     varchar2(255) not null
 );
-
-
 create table milestones (
     project_id                     number
                                    constraint milestones_project_id_fk
