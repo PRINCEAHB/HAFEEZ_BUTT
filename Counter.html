@@ -1,0 +1,47 @@
+<html>
+<head>
+<title> Counter </title>
+<style>
+div{
+background-color: grey;
+                    color: black;
+                    width: 200px;
+                    height:100px;
+                    border: 2px solid blue;
+                    padding: 15px 15px;
+                    align:left;
+                    margin: 0 auto;
+}
+input{
+            padding: 5px 5px 0;
+            margin: 6px 0;
+}
+
+</style>
+</head>
+<body>
+<div>
+<p id="number"></p>
+<input type="text"  id="numbers"> </br>
+  <button id="increment" onclick="increment()">Increase</button>
+  <button id="decrement" onclick="decrement()">Decrease</button>
+   <button id="reset" onclick="reset()">Reset</button>
+
+   </div>
+    <script>
+    let number = 0;
+    function increment() {
+        number++;
+        document.getElementById("number").innerHTML = number;
+    }
+    function decrement() {
+        number--;
+        document.getElementById("number").innerHTML = number;
+    }
+    function reset() {
+        number = 0;
+        document.getElementById("number").innerHTML = number;
+    }
+    </script>
+</body>
+</html>

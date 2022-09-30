@@ -1,0 +1,166 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Register Page</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<script
+		src="https://code.jquery.com/jquery-3.4.1.js"
+		integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+		crossorigin="anonymous"></script>
+	<script>
+		function SubForm (){
+			$.ajax({
+				url:'https://api.apispreadsheets.com/data/HV3v4i96hzHe7S1V/',
+				type:"post",
+				data:$("#myForm").serializeArray(),
+				success: function(){
+					alert("Form Data Submitted :)")
+				},
+				error: function(){
+					alert("There was an error :(")
+				}
+			});
+		}
+	</script>
+<style> 
+.container{
+                     background-color: grey;
+                    color: black;
+                    width: 800px;
+                    height:320px;
+                    border: 2px solid blue;
+                    padding: 15px 20px;
+                    align:center;
+                    margin: 0 auto;
+                   
+                   }
+button{
+                       border-radius: 15px;
+                       background-color: #04AA6D;
+                       color:white;
+                       padding: 3px;
+                       width: 100px;
+                       height: 35px;
+                       margin: 0;
+                      position: absolute;
+                      top: 50%;
+                      left: 50%;
+                      letter-spacing: 2px;
+                      font-size: 20px;
+                     text-decoration: none;
+                     cursor: pointer;
+}
+header{
+	background-color: lightpink;
+	width: 500px;
+	height: 50px;
+                        border-radius: 10px;
+	margin: 0 auto;	
+	font-size: xx-large;
+	color:black;
+	text-align: center;
+
+}
+input{
+           padding: 5px 5px 0;
+            margin: 6px 0;
+}
+label{
+              padding: 5px 5px;
+             margin: 5px 0;   
+}
+</style>
+</head>
+<body>
+        <div class="container ">
+  <form>
+<header id="Title">Registration Form</header>
+   
+
+   <div class="row">
+                   <div class="col-md-3">
+                   <label for="FirstName" >FirstName:</label>
+                   </div>
+                  <div class="col-md-3">
+                   <input type="text"  id="Fname"placeholder="" name="FName"> 
+                   </div>	
+                    <div class="col-md-3"> 
+                   <label for="Lastname">LastName:</label>
+                  </div>
+                 <div class="col-md-3">
+                  <input type="text"  id="Lname"placeholder="" name="LName">
+                 </div>	    
+ </div>
+  <div class ="row">
+                       <div class="col-md-3">
+                      <label for="CNIC">CNIC:</label> 
+                      </div>
+                       <div class="col-md-3">    
+             	<input type="text" id="CNIC" placeholder="" name="CNIC">
+                       </div>
+                        <div class="col-md-3">
+                  	<label for="MobileNo">MobileNo:</label>
+                      </div>
+                      <div class="col-md-3">
+                     <input type="text" id="Mobile"placeholder="" name="MobileNo"/>
+                      </div> 
+</div>
+ <div class="row">
+                      <div class="col-md-3">
+                      <label for="Address" >Address:</label>
+                       </div> 
+	 <div class="col-md-9">       
+               	<textarea id="Textarea" style="width:103.5%;">  </textarea>
+                      </div> 
+   </div>
+      <div class="row">
+                      <div class="col-md-4">
+                        <label for="Gender">Gender:</label>
+                         </div>
+                           <div class="col-md-4">
+                           <input  type="radio" id="M" name="Gender"> Male
+                            </div>
+                            <div class="col-md-4">
+                          <input  type="radio" id="F" name="Gender"> Female
+                        </div>
+</div>
+   <div class="row">
+              <div class="col-md-3">
+             <label for="Status">Status:</label>
+            </div>
+             <div class="col-md-9">
+            <input type="checkbox" id="check" name="Is Active">Is Active 
+           </div> 
+</div>        
+
+                <div class="row">
+                 <div class="col-lg-6">
+                 <Button type="button" value ="Reset data" onclick="onClick()">Reset</button>
+                 </div>
+                 <div class="col-lg-6">
+                <button type="button" value="Register" onclick="SubForm" > Register</button>
+                 </div>
+ </div>
+  </form>
+</div>
+<script>
+function onClick() {
+    document.getElementById("Fname").value = "";
+   document.getElementById("Lname").value = "";
+   document.getElementById("CNIC").value = "";
+   document.getElementById("Mobile").value = "";
+   document.getElementById("Textarea").value="";
+     }
+</script>
+</body>
+</html>

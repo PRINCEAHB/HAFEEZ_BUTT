@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Medical Data</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<script>
+$(function(){
+    
+    $('#Pkr').on('input', function() {
+      calculate();
+    });
+    $('#Percent').on('input', function() {
+     calculate();
+    });
+    function calculate(){
+        var pPos = parseInt($('#Pkr').val()); 
+        var pEarned = parseInt($('#Percent').val());
+        var perc="";
+        if(isNaN(pPos) || isNaN(pEarned)){
+            perc=" ";
+           }else{
+           perc = ((pEarned/pPos) * 100).toFixed(3);
+           }
+        
+        $('#pointsperc').val(perc);
+    }
+
+});
+
+
+</script>
+<style>
+
+.container{
+                     background-color: grey;
+                    color: black;
+                    width: 450px;
+                    height:400px;
+                    border: 2px solid blue;
+                    padding: 15px 20px;
+                    align:center;
+                    margin: 0 auto;
+                   
+                   }
+input{
+           padding: 5px 5px 0;
+            margin: 6px 0;
+}
+label{
+              padding: 5px 5px;
+             margin: 5px 0;   
+}
+</style>
+</head>
+<body>
+
+        <div class="container ">
+  <form>
+  <h2>Medical Data</h2>
+                   <label for="Sr" >Sr#</label>
+                 
+                   <input type="text"  id="Sr"placeholder="" name="Sr#"> </br>
+                   
+                   <label for="Medicine Name">Medicine_Name</label>
+                  
+                  <input type="text"  id="MName"placeholder="" name="Medicine Name"></br>
+      
+                      <label for="Company_Name">Company_Name</label> 
+                  
+                   
+             	<input type="text" id="Co" placeholder="" name="Company_Name"></br>
+                       
+                  	<label for="Price">Price</label>
+                      
+                     <input type="text" id="Pkr"placeholder="" name="Price"/></br>
+                     
+
+                      <label for="Percentage" >Percentage</label>
+                      
+               	<input type ="text" id="Percent" id="Percentage" /></br>
+                
+                       
+                         <label for="Result" >Results</label>
+                      
+               	<input type='text' id="pointsperc" disabled/></br>
+                
+                      <Button type="button" value ="Reset data" onclick="onClick()">Reset</button>
+   </form>
+</div>
+<script>
+function onClick() {
+    document.getElementById("Sr").value = "";
+   document.getElementById("MName").value = "";
+   document.getElementById("Co").value = "";
+   document.getElementById("Pkr").value = "";
+   document.getElementById("Percent").value="";
+   document.getElementById("pointsperc").value="";
+     }
+</script>
+</body>
+</html>

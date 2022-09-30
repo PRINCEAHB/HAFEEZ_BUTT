@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Medical Data</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style> 
+
+input{
+           padding: 5px 5px 0;
+            margin: 6px 0;
+}
+label{
+              padding: 5px 5px;
+             margin: 5px 0;   
+}
+</style>
+</head>
+<body>
+<h2>Medical Data</h2>
+        <div class="container ">
+  <form>
+   <div class="row">
+                   <div class="col-md-3">
+                   <label for="Sr" >Sr#</label>
+                   </div>
+                  <div class="col-md-3">
+                   <input type="text"  id="Sr"placeholder="" name="Sr#"> 
+                   </div>	
+                    <div class="col-md-3"> 
+                   <label for="Medicine Name">Medicine_Name</label>
+                  </div>
+                 <div class="col-md-3">
+                  <input type="text"  id="MName"placeholder="" name="Medicine Name">
+                 </div>	    
+ </div>
+  <div class ="row">
+                       <div class="col-md-3">
+                      <label for="Company_Name">Company_Name</label> 
+                      </div>
+                       <div class="col-md-3">    
+             	<input type="text" id="Co" placeholder="" name="Company_Name">
+                       </div>
+                        <div class="col-md-3">
+                  	<label for="Price">Price</label>
+                      </div>
+                      <div class="col-md-3">
+                     <input type="text" id="Pkr"placeholder="" name="Price"/>
+                      </div> 
+</div>
+ <div class="row">
+                      <div class="col-md-6">
+                      <label for="Percentage" >Percentage</label>
+                       </div> 
+	 <div class="col-md-6">       
+               	<input type ="text" id="Percent" id="Percentage" />
+                      </div> 
+   </div>
+                  <div class="row">
+                 <div class="col-lg-6">
+                 <Button type="button" value ="Reset data" onclick="onClick()">Reset</button>
+                 </div>
+                 <div class="col-lg-6">
+                <button type="button" value="Calculate" onclick="SubForm" > Calculate</button>
+                 </div>
+ </div>
+  </form>
+</div>
+<script>
+function onClick() {
+    document.getElementById("Sr").value = "";
+   document.getElementById("MName").value = "";
+   document.getElementById("Co").value = "";
+   document.getElementById("Pkr").value = "";
+   document.getElementById("Percent").value="";
+     }
+</script>
+</body>
+</html>
