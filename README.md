@@ -1,7 +1,7 @@
 - 👋 Hi, I’m @PRINCEAHB
-- 👀 I’m interested in SQL Database & Server
-- 🌱 I’m currently learning SQL
-- 💞️ I’m looking to collaborate on SQL SERVER
+- 👀 I’m interested in SQL Database 
+- 🌱 I’m currently learning And working SQL
+- 💞️ I’m looking to collaborate on ORACLE DB
 - 📫 How to reach me abdulhafeez7@gmail.com
 
 <!---
